@@ -3,6 +3,7 @@
 ver=0.5
 
 all: full lite min
+	tar -cvf downloads/html5-preloader$(ver).tar downloads/*.js
 
 full: js/html5-preloader.js js/rotary_extension.js
 	cat js/html5-preloader.js js/rotary_extension.js > downloads/html5-preloader$(ver).full.js
