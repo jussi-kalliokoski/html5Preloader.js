@@ -2,6 +2,7 @@
 html5-preloader
 */
 
+// This may be kind of intruding, but it's the most efficient way to achieve what we want with it, and it doesn't at least overwrite anything and can be overwritten itself. (May result in errors or unexpected results if someone wants to make a different Array.inArray() function, so maybe we need to fix this)
 if (typeof Array.prototype.inArray != 'function')
 	Array.prototype.inArray = function(needle)
 	{
@@ -13,7 +14,8 @@ if (typeof Array.prototype.inArray != 'function')
 
 function html5Preloader()
 {
-	var that = this, fileData = [], fileLoadingList = [], playableAudioTypes = [], playableVideoTypes = [], nonplayableAudioTypes = [], nonplayableVideoTypes = [],
+	var that = this, // Using this in private functions may result in erros on some javascript implementations, so this is the workaround
+	fileData = [], fileLoadingList = [], playableAudioTypes = [], playableVideoTypes = [], nonplayableAudioTypes = [], nonplayableVideoTypes = [],
 	audioElementSupport, audioMimeTypes, audioFileExtensions, videoElementSupport, videoMimeTypes, videoFileExtensions, SND, VID, i, supportedImageTypes = ['jpg', 'png', 'apng', 'tiff', 'svg', 'jpeg', 'pnga', 'gif'];
 
 	this.addFiles = function()
@@ -54,6 +56,7 @@ function html5Preloader()
 			return that.onfinish();
 		}
 		cf = fileLoadingList.shift();
+		if (!that.removeFile(cf.identifier)) // Let's make sure we don't get double identifiers, that would make the later loaded file inaccessible. V 0.51
 		that.filesLoaded++;
 		that.nowLoading = cf.identifier;
 		if (cf.datatype == 'audio')
@@ -164,6 +167,7 @@ function html5Preloader()
 		for(var i=0; fileData.length; i++)
 			if (fileData[i].identifier = id)
 				return fileData.splice(i,1);
+		return false;
 	};
 
 	// CONSTRUCT

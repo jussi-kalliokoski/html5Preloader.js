@@ -1,6 +1,6 @@
 # html5-preloader
 # http://code.google.com/p/html5-preloader 
-ver=0.5
+ver=0.51
 
 all: full lite min
 	tar -cvf downloads/html5-preloader$(ver).tar downloads/*.js
