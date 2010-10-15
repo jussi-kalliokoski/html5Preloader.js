@@ -1,5 +1,6 @@
 /*
 html5-preloader
+base module
 */
 
 // This may be kind of intruding, but it's the most efficient way to achieve what we want with it, and it doesn't at least overwrite anything and can be overwritten itself. (May result in errors or unexpected results if someone wants to make a different Array.inArray() function, so maybe we need to fix this)
@@ -14,7 +15,7 @@ if (typeof Array.prototype.inArray != 'function')
 
 function html5Preloader()
 {
-	var that = this, // Using this in private functions may result in erros on some javascript implementations, so this is the workaround
+	var that = this, // Using this in private functions may result in errors on some javascript implementations, so this is the workaround
 	fileData = [], fileLoadingList = [], playableAudioTypes = [], playableVideoTypes = [], nonplayableAudioTypes = [], nonplayableVideoTypes = [],
 	audioElementSupport, audioMimeTypes, audioFileExtensions, videoElementSupport, videoMimeTypes, videoFileExtensions, SND, VID, i, supportedImageTypes = ['jpg', 'png', 'apng', 'tiff', 'svg', 'jpeg', 'pnga', 'gif'];
 
@@ -35,8 +36,14 @@ function html5Preloader()
 				if (fileDataType != 'unsupported')
 					alternates.push({datatype: fileDataType, filepath: filepath[n]});
 			}
-			firstAlternate = alternates.shift();
-			fileLoadingList.push({identifier: fileIdentifier, datatype: firstAlternate.datatype, filepath: firstAlternate.filepath, alternates: alternates});
+			if (firstAlternate = alternates.shift()) // V 0.52. Please note that it's supposed to be just one =, because we're setting the value.
+				fileLoadingList.push({identifier: fileIdentifier, datatype: firstAlternate.datatype, filepath: firstAlternate.filepath, alternates: alternates});
+//			Should we fire an error if no working alternative is found? It does mean that the file isn't available, so maybe we should? This needs some thought.
+//			It would introduce some problems... For example, error handlers using .loadingFile will be probable to cause errors if we do this.
+/*
+			else
+				that.onerror();
+*/
 		}
 		if (fileLoadingList.length > 0)
 		{
@@ -170,7 +177,7 @@ function html5Preloader()
 		return false;
 	};
 
-	// CONSTRUCT
+	// CONSTRUCT: Checks for supported media types and passes on the arguments to addFiles()
 	audioElementSupport = !!(document.createElement('audio').canPlayType);
 	audioMimeTypes = ['audio/mpeg', 'audio/ogg'];
 	audioFileExtensions = [['mp3'], ['ogg']];
@@ -204,7 +211,7 @@ html5Preloader.prototype =
 	active: false,
 	filesLoaded: 0,
 	nowLoading: '',
-	version: 0.5,
+	version: 0.52, // As of V 0.52, this value is controlled by the makefile. # Should it be set here at all? Waste of precious bytes. # Yes, it should be, to make this source file work standalone.
 	onfinish: function(){},
 	onerror: function(e){return true;}
 };
