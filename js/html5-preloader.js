@@ -16,12 +16,12 @@ if (typeof Array.prototype.inArray != 'function')
 function html5Preloader()
 {
 	var that = this, // Using this in private functions may result in errors on some javascript implementations, so this is the workaround
-	fileData = [], fileLoadingList = [], playableAudioTypes = [], playableVideoTypes = [], nonplayableAudioTypes = [], nonplayableVideoTypes = [],
+	filesData = [], fileLoadingList = [], playableAudioTypes = [], playableVideoTypes = [], nonplayableAudioTypes = [], nonplayableVideoTypes = [],
 	audioElementSupport, audioMimeTypes, audioFileExtensions, videoElementSupport, videoMimeTypes, videoFileExtensions, SND, VID, i, supportedImageTypes = ['jpg', 'png', 'apng', 'tiff', 'svg', 'jpeg', 'pnga', 'gif'];
 
 	this.addFiles = function()
 	{
-		var i, n, filepathSplit, fileIdentifier, filepath, fileExtensionSplit, fileDataType, previousState, firstAlternate, alternates = [];
+		var i, n, filepathSplit, fileIdentifier, filepath, fileExtensionSplit, filesDataType, previousState, firstAlternate, alternates = [];
 		for(i=0; i<arguments.length; i++)
 		{
 			alternates = [];
@@ -32,9 +32,9 @@ function html5Preloader()
 			{
 				fileExtensionSplit = filepath[n].split('.');
 				fileExtensionSplit = fileExtensionSplit[fileExtensionSplit.length-1].toLowerCase();
-				fileDataType = getType(fileExtensionSplit);
-				if (fileDataType != 'unsupported')
-					alternates.push({datatype: fileDataType, filepath: filepath[n]});
+				filesDataType = getType(fileExtensionSplit);
+				if (filesDataType != 'unsupported')
+					alternates.push({datatype: filesDataType, filepath: filepath[n]});
 			}
 			if (firstAlternate = alternates.shift()) // V 0.52. Please note that it's supposed to be just one =, because we're setting the value.
 				fileLoadingList.push({identifier: fileIdentifier, datatype: firstAlternate.datatype, filepath: firstAlternate.filepath, alternates: alternates});
@@ -99,7 +99,7 @@ function html5Preloader()
 		theloader = that;
 		snd.addEventListener('canplaythrough', function (){theloader.loadSequence();}, true);
 		snd.onerror = function(e){theloader.triggerError(e);};
-		fileData.push({identifier: filedata.identifier, filepath: filedata.filepath, datatype: filedata.filepath, alternates: filedata.alternates, data: snd});
+		filesData.push({identifier: filedata.identifier, filepath: filedata.filepath, datatype: filedata.datatype, alternates: filedata.alternates, data: snd});
 		snd.load();
 	}
 	function loadVideo(filedata){
@@ -114,7 +114,7 @@ function html5Preloader()
 		theloader = that;
 		vid.addEventListener('canplaythrough', function (){theloader.loadSequence();}, true);
 		vid.onerror = function(e){theloader.triggerError(e);};
-		fileData.push({identifier: filedata.identifier, filepath: filedata.filepath, datatype: filedata.filepath, alternates: filedata.alternates, data: vid});
+		filesData.push({identifier: filedata.identifier, filepath: filedata.filepath, datatype: filedata.datatype, alternates: filedata.alternates, data: vid});
 		vid.load();
 	}
 	function loadImage(filedata)
@@ -123,15 +123,15 @@ function html5Preloader()
 		img.src = filedata.filepath;
 		img.onload = function (){theloader.loadSequence();};
 		img.onerror = function(e){theloader.triggerError(e);};
-		fileData.push({identifier: filedata.identifier, filepath: filedata.filepath, datatype: filedata.filepath, alternates: filedata.alternates, data: img});
+		filesData.push({identifier: filedata.identifier, filepath: filedata.filepath, datatype: filedata.datatype, alternates: filedata.alternates, data: img});
 	}
 	function loadDocument(filedata)
 	{
-		fileData.push({identifier: filedata.identifier, filepath: filedata.filepath, datatype: filedata.filepath, alternates: filedata.alternates, data: false});
+		filesData.push({identifier: filedata.identifier, filepath: filedata.filepath, datatype: filedata.datatype, alternates: filedata.alternates, data: false});
 		if (!jQuery || !jQuery.ajax)
 			return that.loadSequence;
 		var theloader = that,
-		thedata = fileData[fileData.length-1];
+		thedata = filesData[filesData.length-1];
 		jQuery.ajax({url: filedata.filepath, data: {rnduux: Math.random()}, cache: false, success: function(data)
 		{
 			thedata.data = data;
@@ -142,9 +142,9 @@ function html5Preloader()
 	this.triggerError = function(e)
 	{
 		var i, currentFile, currentAlternate;
-		for (i=0; i<fileData.length; i++) if (fileData[i].identifier == that.nowLoading)
+		for (i=0; i<filesData.length; i++) if (filesData[i].identifier == that.nowLoading)
 		{
-			currentFile = fileData[i];
+			currentFile = filesData[i];
 			break;
 		}
 		if (currentFile.alternates.length > 0)
@@ -165,15 +165,15 @@ function html5Preloader()
 	};
 	this.getFile = function(id)
 	{
-		for(var i=0; fileData.length; i++)
-			if (fileData[i].identifier == id)
-				return fileData[i].data;
+		for(var i=0; i<filesData.length; i++)
+			if (filesData[i].identifier == id)
+				return filesData[i].data;
 	};
 	this.removeFile = function(id)
 	{
-		for(var i=0; fileData.length; i++)
-			if (fileData[i].identifier = id)
-				return fileData.splice(i,1);
+		for(var i=0; i<filesData.length; i++)
+			if (filesData[i].identifier == id)
+				return filesData.splice(i,1);
 		return false;
 	};
 
