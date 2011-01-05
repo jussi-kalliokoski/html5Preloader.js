@@ -1,6 +1,6 @@
 # html5-preloader
 # http://code.google.com/p/html5-preloader 
-ver=0.53
+ver=0.54
 
 all: full lite min
 	mv output/*.js ./
