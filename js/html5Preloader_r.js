@@ -189,6 +189,10 @@
 	};
 
 	function testSupported(){
+		if (testSupported.tested){
+			return;
+		}
+		testSupported.tested = true;
 		var 	dummyAudio = AudioElement(),
 			dummyVideo = VideoElement(),
 			i;
@@ -217,10 +221,43 @@
 	}
 
 	function html5Preloader(){
-		var	filelist = [];
+
+		testSupported();
+		
+		var	self		= this,
+			filelist	= [],
+			datalist	= [],
+			currentFilename, currentFileData;
+
+		function onerror(e){
+			if (typeof self.onerror === 'function'){
+				if (self.onerror.call(self, e)){
+					sequence();
+				}
+			} else {
+				sequence();
+			}
+		}
+
+		function onfinish(){
+			if (typeof self.onfinish === 'function'){
+				self.onfinish.call(self);
+			}
+		}
+
+		function sequence(){
+			currentFilename = filelist.shift();
+			currentFileData = loadFile(currentFilename, 
+		}
 
 		this.addFiles = function(){
+			var i, l = arguments.length;
+			for (i=0; i<l; i++){
+				filelist.push(arguments[i]);
+			}
+			sequence();
 		};
+
 	}
 
 	html5Preloader.testSupported = testSupported; // We'll make the charts accessible so that it's possible to not get this data over and over again in projects.
