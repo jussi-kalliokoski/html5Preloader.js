@@ -137,6 +137,10 @@
 			var	self = this,
 				file = construct();
 			function onready(){
+				if (onready.z){
+					return;
+				}
+				onready.z = true;
 				if (typeof self.onfinish === 'function'){
 					self.onfinish.call(file);
 				}
@@ -222,6 +226,10 @@
 
 	function html5Preloader(){
 
+		if (this.constructor !== html5Preloader){
+			throw new Error('html5Preloader must be used as a constructor.');
+		}
+
 		testSupported();
 		
 		var	self		= this,
@@ -246,8 +254,11 @@
 		}
 
 		function sequence(){
+			if (!filelist.length){
+				return onfinish();
+			}
 			currentFilename = filelist.shift();
-			currentFileData = loadFile(currentFilename, 
+			currentFileData = loadFile(currentFilename, sequence, onerror);
 		}
 
 		this.addFiles = function(){
@@ -258,6 +269,7 @@
 			sequence();
 		};
 
+		this.addFiles.apply(this, arguments);
 	}
 
 	html5Preloader.testSupported = testSupported; // We'll make the charts accessible so that it's possible to not get this data over and over again in projects.
