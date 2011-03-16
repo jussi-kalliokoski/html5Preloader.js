@@ -14,8 +14,8 @@
 			} :
 			function(){
 				return document.createElement('audio');
-			},,
-		AudioElement = global.Video ? // IE FIX
+			},
+		VideoElement = global.Video ? // IE FIX
 			function(){
 				return new Video();
 			} :
@@ -92,7 +92,7 @@
 				}
 				alternates.push({
 					type: codecs[c] ? codecs[c].media : isIn(c, supported.imageTypes) ? 'image' : 'document',
-					path: b[a];
+					path: b[a]
 				});
 			}
 		} else {
@@ -179,7 +179,7 @@
 
 		xhr.onreadystatechange = function(){
 			if (this.readyState === 4 && this.status === 200 && typeof self.onfinish === 'function'){
-				self.onfinish.call(this.responseXML || this.responseText || '');
+				self.onfinish.call(this.responseXML || this.responseText || '');
 			}
 		};
 		xhr.onerror = function(e){
@@ -205,7 +205,7 @@
 		support.videoTypes = [];
 		for (i in codecs){
 			if (codecs[i].media === 'video'){
-				if (dummyVideo.canPlayType(codecs[i].codec){
+				if (dummyVideo.canPlayType(codecs[i].codec)){
 					support.videoTypes.push(i);
 					codecs[i].supported = true;
 				} else {
