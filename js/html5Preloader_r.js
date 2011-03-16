@@ -82,8 +82,8 @@
 		if (typeof file === 'string'){
 			a = file.split('*:');
 			b = a[ a[1] ? 1 : 0 ].split('||');
-			this.id = a[1] ? a[0] : b[0];
-			this.alternates = [];
+			self.id = a[1] ? a[0] : b[0];
+			self.alternates = [];
 			for (a = 0; a < b.length; a++){
 				c = b[a].split('.');
 				c = c[c.length - 1].toLowerCase();
@@ -105,7 +105,7 @@
 				file.path,
 				function(){
 					if (typeof self.onfinish === 'function'){
-						self.onfinish.call(this);
+						self.onfinish.call(self);
 					}
 				},
 				function(e){
@@ -113,16 +113,14 @@
 						return loadNext();
 					}
 					if (typeof self.onerror === 'function'){
-						self.onerror.call(this, e);
+						self.onerror.call(self, e);
 					}
 				}
 			);
 		}
 
-		this.onfinish = onfinish;
-		this.onerror = onerror;
-
-		loadNext();
+		self.onfinish = onfinish;
+		self.onerror = onerror;
 	}
 
 	function MediaFile(construct){
@@ -162,14 +160,15 @@
 	loadFile.video = MediaFile(VideoElement);
 	loadFile.image = MediaFile(Image);
 	loadFile.document = function(file, onfinish, onerror){
-		if (this.constructor !== loadFile.document){
+		var	self = this,
+			xhr = new XMLHttpRequest();
+
+		if (self.constructor !== loadFile.document){
 			return new loadFile.document(file);
 		}
 		this.onfinish = onfinish;
 		this.onerror = onerror;
 
-		var	self = this,
-			xhr = new XMLHttpRequest();
 		if (!xhr){
 			if (typeof this.onerror === 'function'){
 				this.onerror.call(xhr, new Error('No XHR!'));
@@ -261,7 +260,7 @@
 			currentFileData = loadFile(currentFilename, sequence, onerror);
 		}
 
-		this.addFiles = function(){
+		self.addFiles = function(){
 			var i, l = arguments.length;
 			for (i=0; i<l; i++){
 				filelist.push(arguments[i]);
@@ -269,7 +268,7 @@
 			sequence();
 		};
 
-		this.addFiles.apply(this, arguments);
+		self.addFiles.apply(this, arguments);
 	}
 
 	html5Preloader.testSupported = testSupported; // We'll make the charts accessible so that it's possible to not get this data over and over again in projects.
