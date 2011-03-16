@@ -76,14 +76,15 @@
 			return new loadFile(file);
 		}
 
-		var	self = this;
+		var	self		= this,
+			alternates	= [],
 			a, b, c;
 
 		if (typeof file === 'string'){
 			a = file.split('*:');
 			b = a[ a[1] ? 1 : 0 ].split('||');
 			self.id = a[1] ? a[0] : b[0];
-			self.alternates = [];
+			self.alternates = alternates;
 			for (a = 0; a < b.length; a++){
 				c = b[a].split('.');
 				c = c[c.length - 1].toLowerCase();
@@ -104,11 +105,13 @@
 			loadFile[file.type](
 				file.path,
 				function(){
+					self.dom = this;
 					if (typeof self.onfinish === 'function'){
 						self.onfinish.call(self);
 					}
 				},
 				function(e){
+					self.dom = this;
 					if (self.alternates.length){
 						return loadNext();
 					}
@@ -121,19 +124,18 @@
 
 		self.onfinish = onfinish;
 		self.onerror = onerror;
+
+		loadNext();
 	}
 
 	function MediaFile(construct){
-
-		function load(file, onfinish, onerror){
-			if (this.constructor !== load){
-				return new load(file);
-			}
-			this.onfinish = onfinish;
-			this.onerror = onerror;
-
+		return function (filename, onfinish, onerror){
 			var	self = this,
 				file = construct();
+
+			self.onfinish = onfinish;
+			self.onerror = onerror;
+
 			function onready(){
 				if (onready.z){
 					return;
@@ -152,8 +154,10 @@
 					self.onerror.call(file, e);
 				}
 			};
-		}
-		return load;
+			self.dom = file;
+			file.src = filename;
+			file.load && file.load();
+		};
 	}
 
 	loadFile.audio = MediaFile(AudioElement);
@@ -163,32 +167,32 @@
 		var	self = this,
 			xhr = new XMLHttpRequest();
 
-		if (self.constructor !== loadFile.document){
-			return new loadFile.document(file);
-		}
-		this.onfinish = onfinish;
-		this.onerror = onerror;
+		self.onfinish = onfinish;
+		self.onerror = onerror;
 
 		if (!xhr){
-			if (typeof this.onerror === 'function'){
-				this.onerror.call(xhr, new Error('No XHR!'));
+			if (typeof self.onerror === 'function'){
+				self.onerror.call(xhr, new Error('No XHR!'));
 			}
 		}
 
 		file += (file.indexOf('?') === -1 ? '?' : ':') + 'randndate=' + Math.floor( Math.random() * 99999 ) + new Date().getTime();
 
 		xhr.onreadystatechange = function(){
-			if (this.readyState === 4 && this.status === 200 && typeof self.onfinish === 'function'){
-				self.onfinish.call(this.responseXML || this.responseText || '');
+			var that = this, dom = self.dom = that.responseXML || that.responseText || '';
+			if (that.readyState === 4 && that.status === 200 && typeof self.onfinish === 'function'){
+				self.onfinish.call(dom);
 			}
 		};
 		xhr.onerror = function(e){
 				if (typeof self.onerror === 'function'){
-					self.onerror.call(file, e);
+					self.onerror.call(xhr, e);
 				}
 		};
 		xhr.open('GET', file);
 		xhr.send();
+
+		self.dom = xhr;
 	};
 
 	function testSupported(){
@@ -268,7 +272,16 @@
 			sequence();
 		};
 
-		self.addFiles.apply(this, arguments);
+		self.addFiles.apply(self, arguments);
+
+		self.get = self.getFile = function(id){
+			var i, l = dataList.length;
+			for (i=0; i<l; i++){
+				if(dataList[i].id === id){
+					return dataList[i].dom;
+				}
+			}
+		}
 	}
 
 	html5Preloader.testSupported = testSupported; // We'll make the charts accessible so that it's possible to not get this data over and over again in projects.
