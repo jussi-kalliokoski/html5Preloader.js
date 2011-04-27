@@ -58,7 +58,8 @@
 		},
 		support = {
 			imageTypes: ['jpg', 'png', 'jpeg', 'tiff']
-		};
+		},
+		FUNC = Function;
 		codecs.ogg = codecs.oga; // :)
 
 	function isIn(needle, haystack){
@@ -72,8 +73,8 @@
 	}
 
 	function loadFile(file, onfinish, onerror){
-		if (this.constructor !== loadFile){
-			return new loadFile(file);
+		if (!(this instanceof loadFile)){
+			return new loadFile(file, onfinish, onerror);
 		}
 
 		var	self		= this,
@@ -82,7 +83,7 @@
 
 		if (typeof file === 'string'){
 			a = file.split('*:');
-			b = a[ a[1] ? 1 : 0 ].split('||');
+			b = a[ a[1] ? 1 : 0 ].split('|');
 			self.id = a[1] ? a[0] : b[0];
 			self.alternates = alternates;
 			for (a = 0; a < b.length; a++){
@@ -92,7 +93,7 @@
 					continue;
 				}
 				alternates.push({
-					type: codecs[c] ? codecs[c].media : isIn(c, supported.imageTypes) ? 'image' : 'document',
+					type: codecs[c] ? codecs[c].media : isIn(c, support.imageTypes) ? 'image' : 'document',
 					path: b[a]
 				});
 			}
@@ -100,9 +101,9 @@
 			throw (new TypeError());
 		}
 
-		function loadNext(){
-			var file = self.alternates.shift();
-			loadFile[file.type](
+		function loadNext(){ // This is a compromise between readability and compactness
+			var file = alternates.shift();
+			file ? new loadFile[file.type](
 				file.path,
 				function(){
 					self.dom = this;
@@ -119,7 +120,10 @@
 						self.onerror.call(self, e);
 					}
 				}
-			);
+			) : self.onerror instanceof FUNC ?
+				self.onerror.call(self, new Error('No viable alternatives')
+			) : self.onfinish instanceof FUNC &&
+				self.onfinish.call(self);
 		}
 
 		self.onfinish = onfinish;
@@ -165,34 +169,31 @@
 	loadFile.image = MediaFile(Image);
 	loadFile.document = function(file, onfinish, onerror){
 		var	self = this,
-			xhr = new XMLHttpRequest();
+			xhr = self.dom = new XMLHttpRequest();
 
 		self.onfinish = onfinish;
 		self.onerror = onerror;
 
 		if (!xhr){
-			if (typeof self.onerror === 'function'){
-				self.onerror.call(xhr, new Error('No XHR!'));
-			}
+			self.onerror instanceof FUNC && self.onerror.call(xhr, new Error('No XHR!'));
+			return;
 		}
 
-		file += (file.indexOf('?') === -1 ? '?' : ':') + 'randndate=' + Math.floor( Math.random() * 99999 ) + new Date().getTime();
+		file += (file.indexOf('?') === -1 ? '?' : '&') + 'rndndt=' + Math.floor( Math.random() * 99999 ) + new Date().getTime();
 
 		xhr.onreadystatechange = function(){
-			var that = this, dom = self.dom = that.responseXML || that.responseText || '';
-			if (that.readyState === 4 && that.status === 200 && typeof self.onfinish === 'function'){
-				self.onfinish.call(dom);
+			var that = this, dom = self.dom = that.responseXML || String(that.responseText || '');
+			if (that.readyState === 4){
+				that.status === 200 ?
+					self.onfinish instanceof FUNC && self.onfinish.call(dom) :
+					self.onerror instanceof FUNC && self.onerror(that);
 			}
 		};
 		xhr.onerror = function(e){
-				if (typeof self.onerror === 'function'){
-					self.onerror.call(xhr, e);
-				}
+			self.onerror instanceof FUNC &&	self.onerror.call(xhr, e);
 		};
-		xhr.open('GET', file);
+		xhr.open('GET', file, true);
 		xhr.send();
-
-		self.dom = xhr;
 	};
 
 	function testSupported(){
@@ -208,20 +209,11 @@
 		support.audioTypes = [];
 		support.videoTypes = [];
 		for (i in codecs){
-			if (codecs[i].media === 'video'){
-				if (dummyVideo.canPlayType(codecs[i].codec)){
-					support.videoTypes.push(i);
-					codecs[i].supported = true;
-				} else {
-					codecs[i].supported = false;
-				}
-				
-			} else if (codecs[i].media === 'audio'){
-				if (dummyAudio.canPlayType(codecs[i].codec)){
-					support.audioTypes.push(i);
-					codecs[i].supported = true;
-				} else {
-					codecs[i].supported = false;
+			if (codecs.hasOwnProperty(i)){
+				if (codecs[i].media === 'video'){
+					(codecs[i].supported = dummyVideo.canPlayType(codecs[i].codec)) && support.videoTypes.push(i);		
+				} else if (codecs[i].media === 'audio'){
+					(codecs[i].supported = dummyAudio.canPlayType(codecs[i].codec)) && support.audioTypes.push(i);
 				}
 			}
 		}
@@ -229,7 +221,7 @@
 
 	function html5Preloader(){
 
-		if (this.constructor !== html5Preloader){
+		if (!(this instanceof html5Preloader)){
 			throw new Error('html5Preloader must be used as a constructor.');
 		}
 
@@ -241,7 +233,7 @@
 			currentFilename, currentFileData;
 
 		function onerror(e){
-			if (typeof self.onerror === 'function'){
+			if (self.onerror instanceof FUNC){
 				if (self.onerror.call(self, e)){
 					sequence();
 				}
@@ -251,7 +243,7 @@
 		}
 
 		function onfinish(){
-			if (typeof self.onfinish === 'function'){
+			if (self.onfinish instanceof FUNC){
 				self.onfinish.call(self);
 			}
 		}
@@ -261,7 +253,7 @@
 				return onfinish();
 			}
 			currentFilename = filelist.shift();
-			currentFileData = loadFile(currentFilename, sequence, onerror);
+			datalist.push(currentFileData = new loadFile(currentFilename, sequence, onerror));
 		}
 
 		self.addFiles = function(){
@@ -272,13 +264,13 @@
 			sequence();
 		};
 
-		self.addFiles.apply(self, arguments);
+		arguments.length && self.addFiles.apply(self, arguments);
 
 		self.get = self.getFile = function(id){
-			var i, l = dataList.length;
+			var i, l = datalist.length;
 			for (i=0; i<l; i++){
-				if(dataList[i].id === id){
-					return dataList[i].dom;
+				if(datalist[i].id === id){
+					return datalist[i].dom && datalist[i].dom.constructor === String ? String(datalist[i].dom) : datalist[i].dom;
 				}
 			}
 		}
