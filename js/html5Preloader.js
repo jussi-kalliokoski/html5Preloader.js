@@ -199,8 +199,8 @@ var html5Preloader = (function(global){
 
 		// CONSTRUCT: Checks for supported media types and passes on the arguments to addFiles()
 		audioElementSupport = !!(document.createElement('audio').canPlayType);
-		audioMimeTypes = ['audio/mpeg', 'audio/ogg'];
-		audioFileExtensions = [['mp3'], ['ogg']];
+		audioMimeTypes = ['audio/mpeg', 'audio/ogg', 'audio/wav'];
+		audioFileExtensions = [['mp3'], ['ogg'], ['wav']];
 
 		videoElementSupport = !!(document.createElement('video').canPlayType);
 		videoMimeTypes = ['video/mp4', 'video/ogg', 'video/divx'];
