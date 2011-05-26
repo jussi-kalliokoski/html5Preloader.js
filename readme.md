@@ -36,7 +36,7 @@ var myLoader = new html5Preloader();
 
 ```
 
- * File adding *
+ *File adding*
 
 Now you should probably add some files to load, that's pretty straightforward to do:
 
