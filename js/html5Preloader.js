@@ -24,6 +24,13 @@ var html5Preloader = (function(global){
 		return false;
 	}
 
+	function bindOnce(elem, evName, callback){
+		return elem.addEventListener(function listener(){
+			elem.removeEventListener(evName, listener);
+			callback.apply(this, arguments);
+		}, true);
+	}
+
 	return function html5Preloader()
 	{
 		var that = this, // Using this in private functions may result in errors on some javascript implementations, so this is the workaround
@@ -108,7 +115,9 @@ var html5Preloader = (function(global){
 			}
 			snd.src = filedata.filepath;
 			theloader = that;
-			snd.addEventListener('canplaythrough', function (){theloader.loadSequence();}, true);
+			bindOnce(snd, 'canplaythrough', function(){
+				theloader.loadSequence();
+			});
 			snd.onerror = function(e){theloader.triggerError(e);};
 			filesData.push({identifier: filedata.identifier, filepath: filedata.filepath, datatype: filedata.datatype, alternates: filedata.alternates, data: snd});
 			snd.load();
@@ -123,6 +132,9 @@ var html5Preloader = (function(global){
 			}
 			vid.src = filedata.filepath;
 			theloader = that;
+			bindOnce(vid, 'canplaythrough', function(){
+				theloader.loadSequence();
+			});
 			vid.addEventListener('canplaythrough', function (){theloader.loadSequence();}, true);
 			vid.onerror = function(e){theloader.triggerError(e);};
 			filesData.push({identifier: filedata.identifier, filepath: filedata.filepath, datatype: filedata.datatype, alternates: filedata.alternates, data: vid});
