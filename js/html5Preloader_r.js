@@ -141,17 +141,13 @@
 			self.onerror = onerror;
 
 			function onready(){
-				if (onready.z){
-					return;
-				}
-				onready.z = true;
+				file.onload = null;
+				file.removeEventListener('canplaythrough', onready);
 				if (typeof self.onfinish === 'function'){
 					self.onfinish.call(file);
 				}
 			}
-			if (file.addEventListener){
-				file.addEventListener('canplaythrough', onready, true);
-			}
+			file.addEventListener && file.addEventListener('canplaythrough', onready, true);
 			file.onload = onready;
 			file.onerror = function (e){
 				if (typeof self.onerror === 'function'){
