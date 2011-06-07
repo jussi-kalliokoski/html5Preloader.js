@@ -25,9 +25,9 @@ var html5Preloader = (function(global){
 	}
 
 	function bindOnce(elem, evName, callback){
-		return elem.addEventListener(function listener(){
+		return elem.addEventListener(evName, function listener(){
 			elem.removeEventListener(evName, listener);
-			callback.apply(this, arguments);
+			return callback.apply(this, arguments);
 		}, true);
 	}
 
