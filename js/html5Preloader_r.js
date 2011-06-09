@@ -164,8 +164,10 @@
 	loadFile.video = MediaFile(VideoElement);
 	loadFile.image = MediaFile(Image);
 	loadFile.document = function(file, onfinish, onerror){
-		var	self = this,
-			xhr = self.dom = new XMLHttpRequest();
+		var	self		= this,
+			parsedUrl	= /(\[((!)?(.+)?\])?$/.exec(file),
+			mimeType	= parsedUrl[3],
+			xhr		= self.dom = new XMLHttpRequest();
 
 		self.onfinish = onfinish;
 		self.onerror = onerror;
@@ -175,7 +177,10 @@
 			return;
 		}
 
-		file += (file.indexOf('?') === -1 ? '?' : '&') + 'rndndt=' + Math.floor( Math.random() * 99999 ) + new Date().getTime();
+		file		= file.substr(0, file.length - parsedUrl[0].length);
+		file		+= parsedUrl[2] ? (file.indexOf('?') === -1 ? '?' : '&') + 'fobarz=' + (+new Date) : '';
+
+		mimeType && xhr.overrideMimeType(mimeType === '@' ? 'text/plain; charset=x-user-defined' : mimeType);
 
 		xhr.onreadystatechange = function(){
 			var that = this, dom = self.dom = that.responseXML || String(that.responseText || '');
