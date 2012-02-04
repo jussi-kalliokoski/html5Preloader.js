@@ -197,9 +197,19 @@ var html5Preloader = (function(global){
 		};
 		this.getFile = function(id)
 		{
-			for(var i=0; i<filesData.length; i++)
-				if (filesData[i].identifier == id)
-					return filesData[i].data;
+			if (id) {
+				for (var i=0; i<filesData.length; i++) {
+					if (filesData[i].identifier == id) {
+						return filesData[i].data;
+					}
+				}
+			} else {
+				var files = []
+				for (var i=0; i<filesData.length; i++) {
+					files.push(filesData[i].data)
+				}
+				return files;
+			}	
 		};
 		this.removeFile = function(id)
 		{

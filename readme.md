@@ -18,7 +18,7 @@ Features
 * Supports all the major MODERN browsers: Chrome/Chromium 6+, IE9+, Opera 10.6+, FF 3.6+, Safari 5+ (if you're not designing a web application that would require one of these browsers, you won't trigger code that isn't supported by the unmentioned browsers anyway, so basically this library supports all browsers)
 * Advanced error handling and support for custom error handling via a single .onerror(e) event.
 * Easily detect when all files have been loaded with an event titled ``` .onfinish() ```
-* Use loaded files via ``` .getFile(identifier) ``` function.
+* Use loaded files via ``` .getFile(identifier) ``` function. You can fetch all loaded files by ommiting an identifier.
 * Graphical feedback extensions are easy to build, downloads include one such extension that draws a basic rotating loader, on the specified 2D context of a canvas.
 * Secure: Minimum conflict with other js libraries. Robust coding makes sure all data remains unaltered by third parties (provided you make your html5Preloader instance a private variable as well)
 
