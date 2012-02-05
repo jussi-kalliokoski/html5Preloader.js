@@ -24,6 +24,9 @@ var	XHR = typeof XMLHttpRequest === 'undefined' ? function () { // IE FIX
 		function () {
 			return document.createElement('video');
 		},
+	ImageElement = function () {
+		return new Image();
+	},
 	codecs = { // Chart from jPlayer
 		oga: { // OGG
 			codec: 'audio/ogg; codecs="vorbis"',
@@ -230,7 +233,7 @@ function MediaFile (construct) {
 
 loadFile.audio = MediaFile(AudioElement);
 loadFile.video = MediaFile(VideoElement);
-loadFile.image = MediaFile(Image);
+loadFile.image = MediaFile(ImageElement);
 
 loadFile.document = function (file, callback) {
 	var	self		= this,
