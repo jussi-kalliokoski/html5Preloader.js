@@ -162,7 +162,7 @@ function loadFile (file, callback) {
 
 	if (typeof file === 'string') {
 		a = file.split('*:');
-		b = a[ a[1] ? 1 : 0 ].split(/\w*||\w*/g);
+		b = a[ a[1] ? 1 : 0 ].split('||');
 		self.id = a[1] ? a[0] : b[0];
 		self.alternates = alternates;
 
