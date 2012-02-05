@@ -162,7 +162,7 @@ function loadFile (file, callback) {
 
 	if (typeof file === 'string') {
 		a = file.split('*:');
-		b = a[ a[1] ? 1 : 0 ].split('|');
+		b = a[ a[1] ? 1 : 0 ].split(/\w*||\w*/g);
 		self.id = a[1] ? a[0] : b[0];
 		self.alternates = alternates;
 
@@ -297,7 +297,7 @@ function html5Preloader () {
 	self._loadcb = function (e, f) {
 		self.filesLoaded++;
 
-		self.emit(e ? 'fileloaded' : 'error', e ? [e, f] : [f]);
+		self.emit(e ? 'error' : 'fileloaded', e ? [e, f] : [f]);
 
 		if (self.filesLoading - self.filesLoaded === 0) {
 			self.active = false;
