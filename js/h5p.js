@@ -291,6 +291,9 @@ loadFile.document = function (file, callback) {
 }());
 
 function html5Preloader () {
+	if (!(this instanceof html5Preloader)) {
+		return arguments.length ? (new html5Preloader(arguments[0])) : (new html5Preloader());
+	}
 	var self = this;
 
 	self.files = [];
