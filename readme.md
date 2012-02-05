@@ -32,7 +32,7 @@ First, include the script to your page (you can download the latest stable versi
 
 ```javascript
 
-var myLoader = new html5Preloader(;)
+var myLoader = new html5Preloader();
 
 ```
 
