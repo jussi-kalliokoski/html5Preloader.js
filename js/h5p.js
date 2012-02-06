@@ -99,6 +99,12 @@ function map (arr, callback) {
 	return r;
 }
 
+function bind (func, self) {
+	return func.bind ? func.bind(self) : function () {
+		return func.apply(self, arguments);
+	};
+}
+
 function EventEmitter () {
 	var k;
 	for (k in EventEmitter.prototype) {
@@ -213,7 +219,7 @@ function MediaFile (construct) {
 
 		function onready () {
 			file.onload = file.onerror = null;
-			file.removeEventListener('canplaythrough', onready);
+			file.removeEventListener && file.removeEventListener('canplaythrough', onready, true);
 
 			callback(null, self);
 		}
@@ -304,18 +310,7 @@ function html5Preloader () {
 
 	html5Preloader.EventEmitter.call(self);
 
-	self._loadcb = function (e, f) {
-		self.filesLoaded++;
-
-		self.emit(e ? 'error' : 'fileloaded', e ? [e, f] : [f]);
-
-		if (self.filesLoading - self.filesLoaded === 0) {
-			self.active = false;
-			self.emit('finish');
-			self.filesLoading = 0;
-			self.filesLoaded = 0;
-		}
-	};
+	self.loadCallback = bind(self.loadCallback, self);
 
 	args.length && self.loadFiles.apply(self, args);
 }
@@ -325,6 +320,19 @@ html5Preloader.prototype = {
 	files: null,
 	filesLoading: 0,
 	filesLoaded: 0,
+
+	loadCallback: function (e, f) {
+		this.filesLoaded++;
+
+		this.emit(e ? 'error' : 'fileloaded', e ? [e, f] : [f]);
+
+		if (this.filesLoading - this.filesLoaded === 0) {
+			this.active = false;
+			this.emit('finish');
+			this.filesLoading = 0;
+			this.filesLoaded = 0;
+		}
+	},
 
 	getFile: function (id) {
 		return	typeof id === 'undefined' ? map(this.files, function (f) {
@@ -358,17 +366,16 @@ html5Preloader.prototype = {
 
 	loadFiles: function () {
 		var	files	= [].slice.call(arguments),
-			self	= this,
 			i, f;
 
 		for (i=0; i<files.length; i++) {
-			f = html5Preloader.loadFile(files[i], self._loadcb);
-			self.files.push(f);
-			self.files[ID_PREFIX + f.id] = f;
-			self.filesLoading++;
+			f = html5Preloader.loadFile(files[i], this.loadCallback);
+			this.files.push(f);
+			this.files[ID_PREFIX + f.id] = f;
+			this.filesLoading++;
 		}
 
-		self.active = self.active || !!self.filesLoading;
+		this.active = this.active || !!this.filesLoading;
 	},
 
 	getProgress: function () {
