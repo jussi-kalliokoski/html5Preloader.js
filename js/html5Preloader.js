@@ -1,260 +1,418 @@
-/*
-html5-preloader
-base module
-*/
+var html5Preloader = (function () {
 
-var html5Preloader = (function(global){
+var	XHR = typeof XMLHttpRequest === 'undefined' ? function () { // IE FIX
+		try {
+			return new ActiveXObject("Msxml2.XMLHTTP.6.0");
+		} catch (err1) {}
+		try {
+			return new ActiveXObject("Msxml2.XMLHTTP.3.0");
+		} catch (err2) {}
 
-	if (!global.XMLHttpRequest)
-		var XMLHttpRequest = function () {
-			try { return new ActiveXObject("Msxml2.XMLHTTP.6.0"); }
-				catch (e) {}
-			try { return new ActiveXObject("Msxml2.XMLHTTP.3.0"); }
-				catch (e) {}
-			return false;
-		};
-	else
-		var XMLHttpRequest = global.XMLHttpRequest;
+		return null;
+	} : XMLHttpRequest,
+	AudioElement = typeof Audio !== 'undefined' ? // IE FIX
+		function(){
+			return new Audio();
+		} :
+		function(){
+			return document.createElement('audio');
+		},
+	VideoElement = typeof Video !== 'undefined' ? // IE FIX
+		function () {
+			return new Video();
+		} :
+		function () {
+			return document.createElement('video');
+		},
+	ImageElement = function () {
+		return new Image();
+	},
+	codecs = { // Chart from jPlayer
+		oga: { // OGG
+			codec: 'audio/ogg; codecs="vorbis"',
+			media: 'audio'
+		},
+		wav: { // PCM
+			codec: 'audio/wav; codecs="1"',
+			media: 'audio'
+		},
+		webma: { // WEBM
+			codec: 'audio/webm; codecs="vorbis"',
+			media: 'audio'
+		},
+		mp3: {
+			codec: 'audio/mpeg; codecs="mp3"',
+			media: 'audio'
+		},
+		m4a: { // AAC / MP4
+			codec: 'audio/mp4; codecs="mp4a.40.2"',
+			media: 'audio'
+		},
+		ogv: { // OGG
+			codec: 'video/ogg; codecs="theora, vorbis"',
+			media: 'video'
+		},
+		webmv: { // WEBM
+			codec: 'video/webm; codecs="vorbis, vp8"',
+			media: 'video'
+		},
+		m4v: { // H.264 / MP4
+			codec: 'video/mp4; codecs="avc1.42E01E, mp4a.40.2"',
+			media: 'video'
+		}
+	},
+	support = {
+		imageTypes: ['jpg', 'png', 'jpeg', 'tiff', 'gif']
+	},
+	ID_PREFIX = 'FILE@';
 
-	function isIn(needle, haystack)
-	{
-		for (var i=0; i<haystack.length; i++)
-			if (haystack[i] === needle)
-				return true;
-		return false;
+codecs.ogg = codecs.oga; // :)
+
+function isIn (needle, haystack) {
+	for (var i=0; i<haystack.length; i++) {
+		if (haystack[i] === needle) {
+			return true;
+		}
 	}
 
-	function bindOnce(elem, evName, callback){
-		return elem.addEventListener(evName, function listener(){
-			elem.removeEventListener(evName, listener);
-			return callback.apply(this, arguments);
-		}, true);
+	return false;
+}
+
+function map (arr, callback) {
+	if (arr.map) {
+		return arr.map(callback);
 	}
 
-	return function html5Preloader()
-	{
-		var that = this, // Using this in private functions may result in errors on some javascript implementations, so this is the workaround
-		filesData = [], fileLoadingList = [], playableAudioTypes = [], playableVideoTypes = [], nonplayableAudioTypes = [], nonplayableVideoTypes = [],
-		audioElementSupport, audioMimeTypes, audioFileExtensions, videoElementSupport, videoMimeTypes, videoFileExtensions, SND, VID, i, supportedImageTypes = ['jpg', 'png', 'apng', 'tiff', 'svg', 'jpeg', 'pnga', 'gif'];
-
-		this.addFiles = function()
-		{
-			var i, n, filepathSplit, fileIdentifier, filepath, fileExtensionSplit, filesDataType, previousState, firstAlternate, alternates = [];
-			for(i=0; i<arguments.length; i++)
-			{
-				alternates = [];
-				filepathSplit = arguments[i].split('*:');
-				fileIdentifier = filepathSplit[0];
-				filepath = filepathSplit[filepathSplit.length-1].split('||');
-				for(n=0; n<filepath.length; n++)
-				{
-					fileExtensionSplit = filepath[n].split('.');
-					fileExtensionSplit = fileExtensionSplit[fileExtensionSplit.length-1].toLowerCase();
-					filesDataType = getType(fileExtensionSplit);
-					if (filesDataType != 'unsupported')
-						alternates.push({datatype: filesDataType, filepath: filepath[n]});
-				}
-				if (firstAlternate = alternates.shift()) // V 0.52. Please note that it's supposed to be just one =, because we're setting the value.
-					fileLoadingList.push({identifier: fileIdentifier, datatype: firstAlternate.datatype, filepath: firstAlternate.filepath, alternates: alternates});
-	//			Should we fire an error if no working alternative is found? It does mean that the file isn't available, so maybe we should? This needs some thought.
-	//			It would introduce some problems... For example, error handlers using .loadingFile will be probable to cause errors if we do this.
-	/*
-				else
-					that.onerror();
-	*/
-			}
-			if (fileLoadingList.length > 0)
-			{
-				previousState = that.active;
-				that.active = true;
-				if(!previousState)
-					that.loadSequence();
-			}
-		};
-		this.loadSequence = function()
-		{
-			if (fileLoadingList.length < 1)
-			{
-				that.active = false;
-				that.filesLoaded = 0;
-				that.nowLoading = '';
-				return that.onfinish();
-			}
-			cf = fileLoadingList.shift();
-			if (!that.removeFile(cf.identifier)) // Let's make sure we don't get double identifiers, that would make the later loaded file inaccessible. V 0.51
-			that.filesLoaded++;
-			that.nowLoading = cf.identifier;
-			if (cf.datatype == 'audio')
-				return loadAudio(cf);
-			if (cf.datatype == 'video')
-				return loadVideo(cf);
-			if (cf.datatype == 'image')
-				return loadImage(cf);
-			if (cf.datatype == 'document')
-				return loadDocument(cf);
-		};
-		function getType(ext)
-		{
-			if (isIn(ext, playableAudioTypes))
-				return 'audio';
-			if (isIn(ext, playableVideoTypes))
-				return 'video';
-			if (isIn(ext, nonplayableAudioTypes) || isIn(ext, nonplayableVideoTypes))
-				return 'unsupported';
-			if (isIn(ext, supportedImageTypes))
-				return 'image';
-			return 'document';
-		}
-		function loadAudio(filedata){
-			var snd, theloader
-			try // IE9 doesn't support Audio(), and Mozilla doesn't support canplaythrough with document.createElement, so this is what I came up with.
-			{
-				snd = new Audio();
-			}catch(e){
-				snd = document.createElement('audio');
-			}
-			snd.src = filedata.filepath;
-			theloader = that;
-			bindOnce(snd, 'canplaythrough', function(){
-				theloader.loadSequence();
-			});
-			snd.onerror = function(e){theloader.triggerError(e);};
-			filesData.push({identifier: filedata.identifier, filepath: filedata.filepath, datatype: filedata.datatype, alternates: filedata.alternates, data: snd});
-			snd.load();
-		}
-		function loadVideo(filedata){
-			var vid, theloader;
-			try // IE9 doesn't support Video(), and Mozilla doesn't support canplaythrough with document.createElement, so this is what I came up with.
-			{
-				vid = new Video();
-			}catch(e){
-				vid = document.createElement('video');
-			}
-			vid.src = filedata.filepath;
-			theloader = that;
-			bindOnce(vid, 'canplaythrough', function(){
-				theloader.loadSequence();
-			});
-			vid.addEventListener('canplaythrough', function (){theloader.loadSequence();}, true);
-			vid.onerror = function(e){theloader.triggerError(e);};
-			filesData.push({identifier: filedata.identifier, filepath: filedata.filepath, datatype: filedata.datatype, alternates: filedata.alternates, data: vid});
-			vid.load();
-		}
-		function loadImage(filedata)
-		{
-			var img = new Image(), theloader = that;
-			img.src = filedata.filepath;
-			img.onload = function (){theloader.loadSequence();};
-			img.onerror = function(e){theloader.triggerError(e);};
-			filesData.push({identifier: filedata.identifier, filepath: filedata.filepath, datatype: filedata.datatype, alternates: filedata.alternates, data: img});
-		}
-		function loadDocument(filedata)
-		{
-			filesData.push({identifier: filedata.identifier, filepath: filedata.filepath, datatype: filedata.datatype, alternates: filedata.alternates, data: false});
-			var theloader = that,
-			thedata = filesData[filesData.length-1],
-			xhr = new XMLHttpRequest(),
-			fp = filedata.filepath;
-			if (!xhr)
-				theloader.triggerError('XHR not available.');
-			fp += ((fp.indexOf('?') === -1) ? '?' : '&') + 'sprrnd=' + Math.floor(Math.random() * 99999);
-			xhr.onreadystatechange = function(){
-				if(this.readyState == 4 && this.status == 200)
-				{
-					thedata.data = this.responseXML || this.responseText || '';
-					if (!thedata.data)
-						return;
-					theloader.loadSequence();
-				}
-			};
-			xhr.onerror = function (e) { theloader.triggerError(e); };
-			xhr.open('GET', fp);
-			xhr.send();
-		}
-		this.triggerError = function(e)
-		{
-			var i, currentFile, currentAlternate;
-			for (i=0; i<filesData.length; i++) if (filesData[i].identifier == that.nowLoading)
-			{
-				currentFile = filesData[i];
-				break;
-			}
-			if (currentFile.alternates.length > 0)
-			{
-				currentAlternate = currentFile.alternates.shift();
-				currentFile.filepath = currentAlternate.filepath;
-				currentFile.datatype = currentAlternate.datatype;
-				fileLoadingList.unshift(currentFile);
-				that.removeFile(that.nowLoading);
-				return that.loadSequence();
-			}
-			if (this.active && this.onerror(e))
-				that.loadSequence();
-		}
-		this.getProgress = function()
-		{
-			return that.filesLoaded/(that.filesLoaded+fileLoadingList.length);
-		};
-		this.getFile = function(id)
-		{
-			if (id) {
-				for (var i=0; i<filesData.length; i++) {
-					if (filesData[i].identifier == id) {
-						return filesData[i].data;
-					}
-				}
-			} else {
-				var files = []
-				for (var i=0; i<filesData.length; i++) {
-					files.push(filesData[i].data)
-				}
-				return files;
-			}	
-		};
-		this.removeFile = function(id)
-		{
-			for(var i=0; i<filesData.length; i++)
-				if (filesData[i].identifier == id)
-					return filesData.splice(i,1);
-			return false;
-		};
-
-		// CONSTRUCT: Checks for supported media types and passes on the arguments to addFiles()
-		audioElementSupport = !!(document.createElement('audio').canPlayType);
-		audioMimeTypes = ['audio/mpeg', 'audio/ogg', 'audio/wav'];
-		audioFileExtensions = [['mp3'], ['ogg'], ['wav']];
-
-		videoElementSupport = !!(document.createElement('video').canPlayType);
-		videoMimeTypes = ['video/mp4', 'video/ogg', 'video/divx'];
-		videoFileExtensions = [['mp4', 'mpeg', 'mpg'], ['ogv', 'oga'], ['dvx', 'divx', 'xdiv']];
-
-		if (audioElementSupport)
-		{
-			SND = document.createElement('audio');
-			for (i=0; i<audioMimeTypes.length; i++)
-				if ('no' != SND.canPlayType(audioMimeTypes[i]) && '' != SND.canPlayType(audioMimeTypes[i]))
-					playableAudioTypes = playableAudioTypes.concat(audioFileExtensions[i]);
-				else
-					nonplayableAudioTypes = nonplayableAudioTypes.concat(audioFileExtensions[i]);
-		}
-		if (videoElementSupport)
-		{
-			VID = document.createElement('video');
-			for (i=0; i<videoMimeTypes.length; i++)
-				if ('no' != VID.canPlayType(videoMimeTypes[i]) && '' != VID.canPlayType(videoMimeTypes[i]))
-					playableVideoTypes = playableVideoTypes.concat(videoFileExtensions[i]);
-				else
-					nonplayableVideoTypes = nonplayableVideoTypes.concat(videoFileExtensions[i]);
-		}
-		this.addFiles.apply(this, arguments);
+	var	r = [],
+		i;
+	for (i=0; i<arr.length; i++) {
+		r.push(callback(arr[i]));
 	}
-})(this);
-html5Preloader.prototype =
-{
-	active: false,
-	filesLoaded: 0,
-	nowLoading: '',
-	version: 0.54, // As of V 0.52, this value is controlled by the makefile. # Should it be set here at all? Waste of precious bytes. # Yes, it should be, to make this source file work standalone.
-	onfinish: function(){},
-	onerror: function(e){return true;}
+
+	return r;
+}
+
+function bind (func, self) {
+	return func.bind ? func.bind(self) : function () {
+		return func.apply(self, arguments);
+	};
+}
+
+function delay (callback) {
+	var args = [].slice.call(arguments, 1);
+	setTimeout(function () {
+		callback.apply(this, args);
+	}, 0);
+}
+
+function EventEmitter () {
+	var k;
+	for (k in EventEmitter.prototype) {
+		if (EventEmitter.prototype.hasOwnProperty(k)) {
+			this[k] = EventEmitter.prototype[k];
+		}
+	}
+	this._listeners = {};
 };
+
+EventEmitter.prototype = {
+	_listeners: null,
+
+	emit: function (name, args) {
+		args = args || [];
+		if (this._listeners[name]) {
+			for (var i=0; i<this._listeners[name].length; i++) {
+				this._listeners[name][i].apply(this, args);
+			}
+		}
+		return this;
+	},
+
+	on: function (name, listener) {
+		this._listeners[name] = this._listeners[name] || [];
+		this._listeners[name].push(listener);
+		return this;
+	},
+
+	off: function (name, listener) {
+		if (this._listeners[name]) {
+			if (!listener) {
+				delete this._listeners[name];
+				return this;
+			}
+			for (var i=0; i<this._listeners[name].length; i++) {
+				if (this._listeners[name][i] === listener) {
+					this._listeners[name].splice(i--, 1);
+				}
+			}
+			this._listeners[name].length || delete this._listeners[name];
+		}
+		return this;
+	},
+
+	once: function (name, listener) {
+		function ev () {
+			this.off(ev);
+			return listener.apply(this, arguments);
+		}
+
+		return this.on(name, ev);
+	}
+};
+
+function loadFile (file, callback) {
+	if (!(this instanceof loadFile)) {
+		return new loadFile(file, callback);
+	}
+
+	var	self		= this,
+		alternates	= [],
+		a, b, c, t;
+
+	if (typeof file === 'string') {
+		a = file.split('*:');
+		b = a[ a[1] ? 1 : 0 ].split('||');
+		self.id = a[1] ? a[0] : b[0];
+		self.alternates = alternates;
+
+		for (a=0; a<b.length; a++) {
+			c = b[a].split('.');
+			c = c[c.length - 1].toLowerCase();
+
+			t = codecs[c] ? codecs[c].media : isIn(c, support.imageTypes) ? 'image' : 'document';
+
+			if (codecs[c] && !codecs[c].supported) {
+				continue;
+			}
+
+			alternates.push({
+				type: t,
+				path: b[a]
+			});
+		}
+
+		alternates.length || alternates.push({
+			type: t,
+			path: b[a-1]
+		});
+	} else {
+		delay(callback, TypeError('Invalid path'), self);
+		return; 
+	}
+
+	function loadNext() {
+		var file = alternates.shift();
+		file ? new loadFile[file.type](
+			file.path,
+			function (e, f) {
+				self.dom = f && f.dom;
+
+				if (e && self.alternates.length) {
+					return loadNext();
+				}
+
+				callback(e, self);
+
+			}) :
+			delay(callback, Error('No viable alternatives'), null);
+	}
+
+	loadNext();
+}
+
+function MediaFile (construct) {
+	return function (filename, callback) {
+		var	self = this,
+			file = construct();
+
+		function onready () {
+			file.onload = file.onerror = null;
+			file.removeEventListener && file.removeEventListener('canplaythrough', onready, true);
+
+			callback(null, self);
+		}
+
+		file.addEventListener && file.addEventListener('canplaythrough', onready, true);
+		file.onload = onready;
+		file.onerror = function (e) {
+			callback(e, self);
+		};
+
+		self.dom = file;
+		file.src = filename;
+
+		file.load && file.load();
+	};
+}
+
+loadFile.audio = MediaFile(AudioElement);
+loadFile.video = MediaFile(VideoElement);
+loadFile.image = MediaFile(ImageElement);
+
+loadFile.document = function (file, callback) {
+	var	self		= this,
+		parsedUrl	= /(\[(!)?(.+)?\])?$/.exec(file),
+		mimeType	= parsedUrl[3],
+		xhr		= self.dom = new XHR();
+
+	if (!xhr) {
+		delay(callback, Error('No XHR!'), self);
+		return;
+	}
+
+	file		= file.substr(0, file.length - parsedUrl[0].length);
+	file		+= parsedUrl[2] ? (file.indexOf('?') === -1 ? '?' : '&') + 'fobarz=' + (+new Date) : '';
+
+	mimeType && xhr.overrideMimeType(mimeType === '@' ? 'text/plain; charset=x-user-defined' : mimeType);
+
+	xhr.onreadystatechange = function () {
+		if (xhr.readyState !== 4) return;
+
+		var dom = self.dom = xhr.responseXML && xhr.responseXML.documentElement ?
+			xhr.responseXML :
+			String(xhr.responseText || '') ;
+
+		xhr.status === 200 ?
+			callback(null, self) :
+			callback({e: Error('Request failed: ' + xhr.status)}, self) ;
+	};
+
+	xhr.onerror = function (e) {
+		callback(e, self);
+	};
+
+	xhr.open('GET', file, true);
+	xhr.send();
+};
+
+(function () {
+	var 	dummyAudio = AudioElement(),
+		dummyVideo = VideoElement(),
+		i;
+
+	support.audio = !!dummyAudio.canPlayType;
+	support.video = !!dummyVideo.canPlayType;
+
+	support.audioTypes = [];
+	support.videoTypes = [];
+
+	for (i in codecs) {
+		if (codecs.hasOwnProperty(i)) {
+			if (codecs[i].media === 'video') {
+				(codecs[i].supported = support.video &&
+					dummyVideo.canPlayType(codecs[i].codec)) &&
+					support.videoTypes.push(i);		
+			} else if (codecs[i].media === 'audio') {
+				(codecs[i].supported = support.audio &&
+					dummyAudio.canPlayType(codecs[i].codec)) &&
+					support.audioTypes.push(i);
+			}
+		}
+	}
+}());
+
+if (!support.audio) {
+	loadFile.audio = function (a, callback) {
+		delay(callback, Error('<AUDIO> not supported.'), a);
+	};
+}
+if (!support.video) {
+	loadFile.video = function (a, callback) {
+		delay(callback, Error('<VIDEO> not supported.'), a);
+	};
+}
+
+function html5Preloader () {
+	var	self = this,
+		args = arguments;
+
+	if (!(self instanceof html5Preloader)) {
+		self = new html5Preloader();
+		args.length && self.loadFiles.apply(self, args);
+		return self;
+	}
+
+	self.files = [];
+
+	html5Preloader.EventEmitter.call(self);
+
+	self.loadCallback = bind(self.loadCallback, self);
+
+	args.length && self.loadFiles.apply(self, args);
+}
+
+html5Preloader.prototype = {
+	active: false,
+	files: null,
+	filesLoading: 0,
+	filesLoaded: 0,
+
+	loadCallback: function (e, f) {
+		this.filesLoaded++;
+
+		this.emit(e ? 'error' : 'fileloaded', e ? [e, f] : [f]);
+
+		if (this.filesLoading - this.filesLoaded === 0) {
+			this.active = false;
+			this.emit('finish');
+			this.filesLoading = 0;
+			this.filesLoaded = 0;
+		}
+	},
+
+	getFile: function (id) {
+		return	typeof id === 'undefined' ? map(this.files, function (f) {
+				return f.dom;
+			}) :
+			typeof id === 'number' ? this.files[id].dom :
+			typeof id === 'string' ? this.files[ID_PREFIX + id].dom :
+			null;
+	},
+
+	removeFile: function (id) {
+		var f, i;
+		switch (typeof id) {
+		case 'undefined':
+			this.files = [];
+			break;
+		case 'number':
+			f = this.files[id];
+			this.files[ID_PREFIX + f.id] && delete this.files[ID_PREFIX + f.id];
+			this.files.splice(id, 1);
+			break;
+		case 'string':
+			f = this.files[ID_PREFIX + id];
+			f && delete this.files[ID_PREFIX + id];
+
+			for (i=0; i<this.files.length; i++) {
+				this.files[i] === f && this.files.splice(i--, 1);
+			}
+		}
+	},
+
+	loadFiles: function () {
+		var	files	= [].slice.call(arguments),
+			i, f;
+
+		for (i=0; i<files.length; i++) {
+			f = html5Preloader.loadFile(files[i], this.loadCallback);
+			this.files.push(f);
+			this.files[ID_PREFIX + f.id] = f;
+			this.filesLoading++;
+		}
+
+		this.active = this.active || !!this.filesLoading;
+	},
+
+	getProgress: function () {
+		return this.filesLoading ? this.filesLoading / this.filesLoading : 1.0;
+	}
+};
+
+html5Preloader.support = support;
+html5Preloader.loadFile = loadFile;
+html5Preloader.EventEmitter = EventEmitter;
+
+return html5Preloader;
+
+}());
