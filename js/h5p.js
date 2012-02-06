@@ -355,11 +355,11 @@ html5Preloader.prototype = {
 			this.files.splice(id, 1);
 			break;
 		case 'string':
-			f = this.files[ID_PREFIX + f.id];
-			this.files[ID_PREFIX + f.id] && delete this.files[ID_PREFIX + f.id];
+			f = this.files[ID_PREFIX + id];
+			f && delete this.files[ID_PREFIX + id];
 
 			for (i=0; i<this.files.length; i++) {
-				this.files.splice(i--, 1);
+				this.files[i] === f && this.files.splice(i--, 1);
 			}
 		}
 	},
