@@ -59,10 +59,10 @@ var	XHR = typeof XMLHttpRequest === 'undefined' ? function () { // IE FIX
 		m4v: { // H.264 / MP4
 			codec: 'video/mp4; codecs="avc1.42E01E, mp4a.40.2"',
 			media: 'video'
-		},
+		}
 	},
 	support = {
-		imageTypes: ['jpg', 'png', 'jpeg', 'tiff', 'gif'],
+		imageTypes: ['jpg', 'png', 'jpeg', 'tiff', 'gif']
 	},
 	ID_PREFIX = 'FILE@';
 
@@ -157,7 +157,7 @@ EventEmitter.prototype = {
 		}
 
 		return this.on(name, ev);
-	},
+	}
 };
 
 function loadFile (file, callback) {
@@ -185,7 +185,7 @@ function loadFile (file, callback) {
 
 			alternates.push({
 				type: codecs[c] ? codecs[c].media : isIn(c, support.imageTypes) ? 'image' : 'document',
-				path: b[a],
+				path: b[a]
 			});
 		}
 	} else {
@@ -380,7 +380,7 @@ html5Preloader.prototype = {
 
 	getProgress: function () {
 		return this.filesLoading ? this.filesLoading / this.filesLoading : 1.0;
-	},
+	}
 };
 
 html5Preloader.support = support;
