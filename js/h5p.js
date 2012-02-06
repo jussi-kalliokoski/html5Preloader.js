@@ -68,13 +68,6 @@ var	XHR = typeof XMLHttpRequest === 'undefined' ? function () { // IE FIX
 
 codecs.ogg = codecs.oga; // :)
 
-function bindOnce (elem, evName, callback) {
-	return elem.addEventListener && elem.addEventListener(evName, function listener () {
-		elem.removeEventListener(evName, listener);
-		return callback.apply(this, arguments);
-	}, true);
-}
-
 function isIn (needle, haystack) {
 	for (var i=0; i<haystack.length; i++) {
 		if (haystack[i] === needle) {
