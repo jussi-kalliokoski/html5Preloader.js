@@ -291,11 +291,18 @@ loadFile.document = function (file, callback) {
 }());
 
 function html5Preloader () {
-	var self = this;
+	var	self = this,
+		args = arguments;
+
+	if (!(self instanceof html5Preloader)) {
+		self = new html5Preloader();
+		args.length && self.loadFiles.apply(self, args);
+		return self;
+	}
 
 	self.files = [];
 
-	html5Preloader.EventEmitter.call(this);
+	html5Preloader.EventEmitter.call(self);
 
 	self._loadcb = function (e, f) {
 		self.filesLoaded++;
@@ -310,7 +317,7 @@ function html5Preloader () {
 		}
 	};
 
-	arguments.length && self.loadFiles.apply(this, arguments);
+	args.length && self.loadFiles.apply(self, args);
 }
 
 html5Preloader.prototype = {
