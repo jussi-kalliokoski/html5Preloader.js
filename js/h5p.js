@@ -105,6 +105,13 @@ function bind (func, self) {
 	};
 }
 
+function delay (callback) {
+	var args = [].slice.call(arguments, 1);
+	setTimeout(function () {
+		callback.apply(this, args);
+	}, 0);
+}
+
 function EventEmitter () {
 	var k;
 	for (k in EventEmitter.prototype) {
@@ -167,7 +174,7 @@ function loadFile (file, callback) {
 
 	var	self		= this,
 		alternates	= [],
-		a, b, c;
+		a, b, c, t;
 
 	if (typeof file === 'string') {
 		a = file.split('*:');
@@ -179,17 +186,25 @@ function loadFile (file, callback) {
 			c = b[a].split('.');
 			c = c[c.length - 1].toLowerCase();
 
+			t = codecs[c] ? codecs[c].media : isIn(c, support.imageTypes) ? 'image' : 'document';
+
 			if (codecs[c] && !codecs[c].supported) {
 				continue;
 			}
 
 			alternates.push({
-				type: codecs[c] ? codecs[c].media : isIn(c, support.imageTypes) ? 'image' : 'document',
+				type: t,
 				path: b[a]
 			});
 		}
+
+		alternates.length || alternates.push({
+			type: t,
+			path: b[a-1]
+		});
 	} else {
-		return callback(TypeError('Invalid path'), self);
+		delay(callback, TypeError('Invalid path'), self);
+		return; 
 	}
 
 	function loadNext() {
@@ -206,7 +221,7 @@ function loadFile (file, callback) {
 				callback(e, self);
 
 			}) :
-			callback(Error('No viable alternatives'), null);
+			delay(callback, Error('No viable alternatives'), null);
 	}
 
 	loadNext();
@@ -248,7 +263,8 @@ loadFile.document = function (file, callback) {
 		xhr		= self.dom = new XHR();
 
 	if (!xhr) {
-		return callback(Error('No XHR!'), self);
+		delay(callback, Error('No XHR!'), self);
+		return;
 	}
 
 	file		= file.substr(0, file.length - parsedUrl[0].length);
@@ -257,13 +273,15 @@ loadFile.document = function (file, callback) {
 	mimeType && xhr.overrideMimeType(mimeType === '@' ? 'text/plain; charset=x-user-defined' : mimeType);
 
 	xhr.onreadystatechange = function () {
-		var dom = self.dom = xhr.responseXML || String(xhr.responseText || '');
+		if (xhr.readyState !== 4) return;
 
-		if (xhr.readyState === 4) {
-			xhr.status === 200 ?
-				callback(null, self) :
-				callback({e: Error('Request failed: ' + xhr.status)}, self) ;
-		}
+		var dom = self.dom = xhr.responseXML && xhr.responseXML.documentElement ?
+			xhr.responseXML :
+			String(xhr.responseText || '') ;
+
+		xhr.status === 200 ?
+			callback(null, self) :
+			callback({e: Error('Request failed: ' + xhr.status)}, self) ;
 	};
 
 	xhr.onerror = function (e) {
@@ -288,13 +306,28 @@ loadFile.document = function (file, callback) {
 	for (i in codecs) {
 		if (codecs.hasOwnProperty(i)) {
 			if (codecs[i].media === 'video') {
-				(codecs[i].supported = dummyVideo.canPlayType(codecs[i].codec)) && support.videoTypes.push(i);		
+				(codecs[i].supported = support.video &&
+					dummyVideo.canPlayType(codecs[i].codec)) &&
+					support.videoTypes.push(i);		
 			} else if (codecs[i].media === 'audio') {
-				(codecs[i].supported = dummyAudio.canPlayType(codecs[i].codec)) && support.audioTypes.push(i);
+				(codecs[i].supported = support.audio &&
+					dummyAudio.canPlayType(codecs[i].codec)) &&
+					support.audioTypes.push(i);
 			}
 		}
 	}
 }());
+
+if (!support.audio) {
+	loadFile.audio = function (a, callback) {
+		delay(callback, Error('<AUDIO> not supported.'), a);
+	};
+}
+if (!support.video) {
+	loadFile.video = function (a, callback) {
+		delay(callback, Error('<VIDEO> not supported.'), a);
+	};
+}
 
 function html5Preloader () {
 	var	self = this,
