@@ -405,7 +405,7 @@ html5Preloader.prototype = {
 	},
 
 	getProgress: function () {
-		return this.filesLoading ? this.filesLoading / this.filesLoading : 1.0;
+		return this.filesLoading ? this.filesLoaded / this.filesLoading : 1.0;
 	}
 };
 
