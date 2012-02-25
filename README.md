@@ -39,7 +39,8 @@ Now you should probably add some files to load, that's pretty straightforward to
 
 // You can call the .addFiles() function
 
-myLoader.addFiles('file1', 'mysound*:sound.ogg||sound.mp3'); // To shorten load times, you should always offer the .mp3 as a last alternative.
+// To shorten load times, you should always offer the .mp3 as a last alternative.
+myLoader.addFiles('file1', 'mysound*:sound.ogg||sound.mp3'); 
 
 // Or you can always add the files on construct, like this:
 myLoader = html5Preloader('file1', 'mysound*:sound.ogg||sound.mp3');
