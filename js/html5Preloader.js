@@ -404,6 +404,10 @@ html5Preloader.prototype = {
 		this.active = this.active || !!this.filesLoading;
 	},
 
+	addFiles: function (list) {
+		return this.loadFiles.apply(this, list instanceof Array ? list : arguments);
+	},
+
 	getProgress: function () {
 		return this.filesLoading ? this.filesLoaded / this.filesLoading : 1.0;
 	}
