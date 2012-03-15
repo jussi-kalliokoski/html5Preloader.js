@@ -1,4 +1,4 @@
-VERSION := 0.60
+VERSION := 0.61
 INLINE_SOURCE := "html5Preloader.prototype.version=${VERSION};"
 OUT := html5Preloader.${VERSION}
 IN := js/html5Preloader.js js/rotary_extension.js
