@@ -67,6 +67,7 @@ var	XHR = typeof XMLHttpRequest === 'undefined' ? function () { // IE FIX
 	ID_PREFIX = 'FILE@';
 /* :) may fail sometimes, but these are the most common cases */
 codecs.ogg = codecs.oga;
+codecs.mp4 = codecs.m4v;
 codecs.webm = codecs.webmv;
 
 function isIn (needle, haystack) {
