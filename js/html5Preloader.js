@@ -65,8 +65,9 @@ var	XHR = typeof XMLHttpRequest === 'undefined' ? function () { // IE FIX
 		imageTypes: ['jpg', 'png', 'jpeg', 'tiff', 'gif']
 	},
 	ID_PREFIX = 'FILE@';
-
-codecs.ogg = codecs.oga; // :)
+/* :) may fail sometimes, but these are the most common cases */
+codecs.ogg = codecs.oga;
+codecs.webm = codecs.webmv;
 
 function isIn (needle, haystack) {
 	for (var i=0; i<haystack.length; i++) {
