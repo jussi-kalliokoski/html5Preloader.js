@@ -65,6 +65,10 @@ myLoader.on('error', function(e){ console.error(e); });
 
 ```
 
+### License
+
+html5Preloader is licensed under MIT License.
+
 ### Changelog
 
 #### 0.60 - A complete rewrite
