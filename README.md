@@ -1,6 +1,6 @@
 #html5Preloader
 
-With the growing use of HTML5 and it taking over the browser game scene, developers need an easy API to preload their resources on to the browser. html5-preloader aims to offer this, and in a compact, yet customizable way. html5-preloader supports almost all of the data types out there, from mp4 to xml, and with flexible fallback support.
+With the growing use of HTML5 and it taking over the browser game scene, developers need an easy API to preload their resources on to the browser. html5-preloader aims to offer this, and in a compact, yet customizable way. html5-preloader supports almost all of the data types out there, from mp4 to XML, and with flexible fallback support.
 
 ## Why Choose H5P?
 
