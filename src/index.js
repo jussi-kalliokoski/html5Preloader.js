@@ -1,4 +1,4 @@
-var Preloader = function (XHR) {
+var html5Preloader = function (XHR) {
 "use strict";
 
 XHR = XHR || function () {
