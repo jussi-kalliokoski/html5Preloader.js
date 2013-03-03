@@ -11,7 +11,8 @@ function Preloader (files, callback, errorCallback) {
     if ( !files.length ) return cb()
 
     for ( var i = 0; i < files.length; i++ ) {
-        var file = files[i]
+        var file = Preloader.guess ? Preloader.guess(files[i]) : files[i]
+
         if ( file.type in Preloader.types ) {
             f.push(Preloader.types[file.type](file, cb, cb))
         } else {

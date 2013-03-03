@@ -20,7 +20,7 @@ function MediaResource (options, callback, errorCallback) {
             var s = elem('source')
 
             if ( typeof src !== 'string') {
-                s.setAttribute('type', src.type)
+                s.setAttribute('type', src.mime)
                 src = src.src
             }
 
