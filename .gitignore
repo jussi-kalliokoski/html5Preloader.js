@@ -1,4 +1,4 @@
 *.DS_Store
 *html5Preloader.js
 node_modules
-test/basic.html
+test/spec/*.js

@@ -3,7 +3,7 @@ PACKAGE ?= package.json
 DST ?= html5Preloader.js
 SRC ?= src/index.js
 SOURCES ?= src/*.js
-IMPORTER ?= node_modules/importer/js/cmd.js
+IMPORTER ?= ./node_modules/importer/js/cmd.js
 
 test: test/src/$(DST)
 	mkdir -p test/src
