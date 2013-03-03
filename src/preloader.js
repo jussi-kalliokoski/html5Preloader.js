@@ -1,4 +1,8 @@
 function Preloader (files, callback, errorCallback) {
+    if ( !(this instanceof Preloader) ) {
+        return new Preloader(files, callback, errorCallback)
+    }
+
     var cb = bind(this.done, this)
     this.content = []
     this.init({}, callback, errorCallback)

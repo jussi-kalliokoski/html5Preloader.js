@@ -6,7 +6,6 @@ SOURCES ?= src/*.js
 IMPORTER ?= ./node_modules/importer/js/cmd.js
 
 test: test/src/$(DST)
-	mkdir -p test/src
 	grunt test
 
 $(MODULES_DIR): $(PACKAGE)
