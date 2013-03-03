@@ -1,6 +1,6 @@
 [submodule "dist"]
 	path = dist
-	url = https://github.com:jussi-kalliokoski/html5Preloader.js
+	url = git://github.com:jussi-kalliokoski/html5Preloader.js.git
 [submodule "test/data"]
 	path = test/data
-	url = https://github.com:jussi-kalliokoski/html5Preloader.js
+	url = git://github.com:jussi-kalliokoski/html5Preloader.js.git
