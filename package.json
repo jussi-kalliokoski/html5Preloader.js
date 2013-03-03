@@ -1,0 +1,29 @@
+{
+  "name": "html5Preloader.js",
+  "version": "0.7.0",
+  "description": "A preloader for all your resource preloading needs.",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "make test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/jussi-kalliokoski/html5Preloader.js.git"
+  },
+  "keywords": [
+    "preload",
+    "preloader",
+    "resource",
+    "browser"
+  ],
+  "author": "Jussi Kalliokoski",
+  "license": "MIT",
+  "readmeFilename": "README.md",
+  "devDependencies": {
+    "importer": "~0.5.2",
+    "grunt": "~0.4.0",
+    "grunt-contrib-jasmine": "~0.3.3"
+  }
+}
