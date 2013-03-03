@@ -15,6 +15,5 @@ $(IMPORTER): $(MODULES_DIR)
 
 %$(DST): $(IMPORTER) $(SOURCES)
 	$(IMPORTER) $(SRC) $@
-	cat $@
 
 .PHONY: all clean test
