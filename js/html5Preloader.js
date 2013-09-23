@@ -270,13 +270,17 @@ loadFile.document = function (file, callback) {
 	xhr.onreadystatechange = function () {
 		if (xhr.readyState !== 4) return;
 
-		var dom = self.dom = xhr.responseXML && xhr.responseXML.documentElement ?
-			xhr.responseXML :
-			String(xhr.responseText || '') ;
+		try {
+			self.dom = xhr.responseXML && xhr.responseXML.documentElement ?
+				xhr.responseXML :
+				String(xhr.responseText || '') ;
 
-		xhr.status === 200 ?
-			callback(null, self) :
-			callback({e: Error('Request failed: ' + xhr.status)}, self) ;
+			xhr.status === 200 ?
+				callback(null, self) :
+				callback({e: Error('Request failed: ' + xhr.status)}, self) ;
+		} catch (e) {
+			callback({e: e}, self);
+		}
 	};
 
 	xhr.onerror = function (e) {
