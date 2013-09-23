@@ -366,10 +366,15 @@ html5Preloader.prototype = {
 	files: null,
 	filesLoading: 0,
 	filesLoaded: 0,
+	filesLoadedMap: {},
 	timeout: null,
 
 	loadCallback: function (e, f) {
-		this.filesLoaded++;
+
+		if (!this.filesLoadedMap[f.id]) {
+			this.filesLoaded++;
+			this.filesLoadedMap[f.id] = f;
+		}
 
 		this.emit(e ? 'error' : 'fileloaded', e ? [e, f] : [f]);
 
