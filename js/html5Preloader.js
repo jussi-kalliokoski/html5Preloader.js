@@ -162,9 +162,9 @@ EventEmitter.prototype = {
 	}
 };
 
-function loadFile (file, callback) {
+function loadFile (file, callback, timeout) {
 	if (!(this instanceof loadFile)) {
-		return new loadFile(file, callback);
+		return new loadFile(file, callback, timeout);
 	}
 
 	var	self		= this,
@@ -199,24 +199,38 @@ function loadFile (file, callback) {
 		});
 	} else {
 		delay(callback, TypeError('Invalid path'), self);
-		return; 
+		return;
 	}
 
 	function loadNext() {
-		var file = alternates.shift();
-		file ? new loadFile[file.type](
-			file.path,
-			function (e, f) {
-				self.dom = f && f.dom;
+		var file = alternates.shift(),
+			_timeoutTimer = null;
 
-				if (e && self.alternates.length) {
-					return loadNext();
-				}
+		if (!file) {
+			delay(callback, {e: Error('No viable alternatives')}, null);
+			return;
+		}
 
-				callback(e, self);
+		if (typeof timeout === 'number') {
+			_timeoutTimer = setTimeout(function() {
+				delay(callback, {e: Error('Load event not fired within ' + timeout + 'ms')}, self);
+			}, timeout);
+		}
 
-			}) :
-			delay(callback, Error('No viable alternatives'), null);
+		new loadFile[file.type](
+				file.path,
+				function (e, f) {
+
+					_timeoutTimer && clearTimeout(_timeoutTimer);
+
+					self.dom = f && f.dom;
+
+					if (e && self.alternates.length) {
+						return loadNext();
+					}
+
+					callback(e, self);
+				});
 	}
 
 	loadNext();
@@ -307,7 +321,7 @@ loadFile.document = function (file, callback) {
 			if (codecs[i].media === 'video') {
 				(codecs[i].supported = support.video &&
 					dummyVideo.canPlayType(codecs[i].codec)) &&
-					support.videoTypes.push(i);		
+					support.videoTypes.push(i);
 			} else if (codecs[i].media === 'audio') {
 				(codecs[i].supported = support.audio &&
 					dummyAudio.canPlayType(codecs[i].codec)) &&
@@ -352,6 +366,7 @@ html5Preloader.prototype = {
 	files: null,
 	filesLoading: 0,
 	filesLoaded: 0,
+	timeout: null,
 
 	loadCallback: function (e, f) {
 		this.filesLoaded++;
@@ -401,7 +416,7 @@ html5Preloader.prototype = {
 			i, f;
 
 		for (i=0; i<files.length; i++) {
-			f = html5Preloader.loadFile(files[i], this.loadCallback);
+			f = html5Preloader.loadFile(files[i], this.loadCallback, this.timeout);
 			this.files.push(f);
 			this.files[ID_PREFIX + f.id] = f;
 			this.filesLoading++;
